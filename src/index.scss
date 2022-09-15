@@ -1,0 +1,21 @@
+body {
+  margin: 0;
+  font-family: 'Fira Sans Extra Condensed', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: Operator Mono Lig, Menlo, Monaco, 'Courier New', monospace;
+}
+
+a {
+  text-decoration: none;
+  color: black;
+}
+
+// box-sizing: border-box; makes it that your border and your padding don't throw off dimensions
+// of your element
+* {
+  box-sizing: border-box;
+}
