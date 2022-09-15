@@ -1,3 +1,8 @@
+// We are writing logic in here, to protect our frontend application from this 
+// external service, firebase in this case, that is subject to change.
+// We define how it is that this service will interface with our frontend app
+// by adding this utils file as a later between the frontend code and this additional firebase library
+
 
 // initializeApp creates an app instance for you, based off of some kind of config.
 // this config is an object that allows us to to attach the firebase/app to the one we have made online
@@ -6,10 +11,12 @@ import { initializeApp } from 'firebase/app';
 // install our authentication. Using these to create our google sign in.
 import { 
   getAuth, // to create auth instance
-  signInWithRedirect,
   signInWithPopup,
-  GoogleAuthProvider
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword
 } from 'firebase/auth';
+// the email/password provider is native to firebase/auth so no need for import,
+// but we do need createUserWithEmailAndPassword.
 
 // firestore is a different service. 
 // we need to instatiate our firestore instance.
@@ -36,6 +43,7 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 
 // to use google auth, we initialise a provider using this google auth provider.
+//  we can use other providers too.
 // gives you back this prov instance. GoogleAuthProvider() is essentially a class. 
 const provider = new GoogleAuthProvider();
 
@@ -47,8 +55,7 @@ provider.setCustomParameters({
 // export auth, create instance
 export const auth = getAuth(); 
 // export out sign in with popup, pass auth and provider. 
-export const signInWithGooglePopup = () => signInWithPopup(auth, provider); 
-
+export const signInWithGooglePopup = () => signInWithPopup(auth, provider);
 
 // firestore. create the database. equal to calling getFrestore();
 // telling firebase when we wanna get a documer, set a document. we pass the database.
@@ -57,9 +64,13 @@ export const db = getFirestore();
 // create a method - async function that receives some use authentication object.
 // we want a function that will take the data fromt the auth service and then store it in firestore
 // in this case it is the user sign-in.
-export const createUserDocumentFromAuth = async (userAuth) => {
+export const createUserDocumentFromAuth = async (
+  userAuth,
+  additionalInformation = {}
+) => {
   // we need to check if there's an existing document reference. 
   // doc takes 3 args.. 1-database, 2-collection 3-identifier.
+  if (!userAuth) return; // protect our code. Don't run the function unless we get the values. 
   const userDocRef = doc(db, 'users', userAuth.uid);
   // if we don't have an existing doc ref, google will still generate one for us.
   console.log(userDocRef); // gives back an object that represents some doc ref in the database.
@@ -68,7 +79,6 @@ export const createUserDocumentFromAuth = async (userAuth) => {
   const userSnapshot = await getDoc(userDocRef);  
   console.log(userSnapshot.exists()); // points to same id as above, but this is a speial object
   // on this are different ways we can ascertain whether this document exists.
-
 
   // if user data does not exist we need to to do the following:
   // create / set the document with the data from userAuth in my collection.
@@ -84,7 +94,8 @@ export const createUserDocumentFromAuth = async (userAuth) => {
       await setDoc(userDocRef, {
         displayName,
         email,
-        createdAt
+        createdAt,
+        ...additionalInformation,
       });
 
     } catch (error) {
@@ -95,4 +106,12 @@ export const createUserDocumentFromAuth = async (userAuth) => {
   // if user data DOES exist then it's simple:
   return userDocRef;
 };
+
+// We need an email and a password for this object.
+// If we don't get either, then we don't call this method.
+export const createAuthUserWithEmailAndPassword = async (email, password) => {
+  if (!email || !password) return;
+  // this won't run unless we get both the above values.
+  return await createUserWithEmailAndPassword(auth, email, password);
+}
 
