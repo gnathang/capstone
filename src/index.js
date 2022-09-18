@@ -1,19 +1,24 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-// import BrowserRouter
 import { BrowserRouter } from 'react-router-dom';
 
-import './index.scss';
 import App from './App';
+import { UserProvider } from './contexts/user.context';
 import reportWebVitals from './reportWebVitals';
-import { dom } from 'aria-query';
+// import { dom } from 'aria-query';
+
+import './index.scss';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
 root.render(
   <React.StrictMode>
-    {/* Wrap our App Componnent inside our broswer router */}
+    {/* Wrap our App Component inside our broswer router */}
     <BrowserRouter>
-      <App />
+      {/* ALso wrap our App Component inside our UserProvider (to provide our context) */}
+      <UserProvider> 
+        <App />
+      </UserProvider>
     </BrowserRouter>
   </React.StrictMode> 
 );

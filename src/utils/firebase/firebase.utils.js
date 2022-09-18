@@ -11,9 +11,13 @@ import { initializeApp } from 'firebase/app';
 // install our authentication. Using these to create our google sign in.
 import { 
   getAuth, // to create auth instance
+  signInWithRedirect,
   signInWithPopup,
   GoogleAuthProvider,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
 } from 'firebase/auth';
 // the email/password provider is native to firebase/auth so no need for import,
 // but we do need createUserWithEmailAndPassword.
@@ -21,7 +25,6 @@ import {
 // firestore is a different service. 
 // we need to instatiate our firestore instance.
 import {
-  setFirestore,
   doc, // retreive doc from inside firestore database
   getDoc, // access the docs DATA
   setDoc, // setting the docs DATA
@@ -45,17 +48,20 @@ const firebaseApp = initializeApp(firebaseConfig);
 // to use google auth, we initialise a provider using this google auth provider.
 //  we can use other providers too.
 // gives you back this prov instance. GoogleAuthProvider() is essentially a class. 
-const provider = new GoogleAuthProvider();
+const googleProvider = new GoogleAuthProvider();
 
 // this takes some kind of config and we can state how we want it to behave
-provider.setCustomParameters({
+googleProvider.setCustomParameters({
   prompt: 'select_account' // every time someonce interacts, force them to select account.
 });
 
 // export auth, create instance
 export const auth = getAuth(); 
 // export out sign in with popup, pass auth and provider. 
-export const signInWithGooglePopup = () => signInWithPopup(auth, provider);
+export const signInWithGooglePopup = () =>
+  signInWithPopup(auth, googleProvider);
+export const signInWithGoogleRedirect = () =>
+  signInWithRedirect(auth, googleProvider);
 
 // firestore. create the database. equal to calling getFrestore();
 // telling firebase when we wanna get a documer, set a document. we pass the database.
@@ -71,13 +77,13 @@ export const createUserDocumentFromAuth = async (
   // we need to check if there's an existing document reference. 
   // doc takes 3 args.. 1-database, 2-collection 3-identifier.
   if (!userAuth) return; // protect our code. Don't run the function unless we get the values. 
+  
   const userDocRef = doc(db, 'users', userAuth.uid);
+ 
   // if we don't have an existing doc ref, google will still generate one for us.
-  console.log(userDocRef); // gives back an object that represents some doc ref in the database.
-  // but we don't get a value, but we get back the uid and path to collection uid.
 
   const userSnapshot = await getDoc(userDocRef);  
-  console.log(userSnapshot.exists()); // points to same id as above, but this is a speial object
+  console.log(userSnapshot.exists()); // points to same id as above, but this is a special object
   // on this are different ways we can ascertain whether this document exists.
 
   // if user data does not exist we need to to do the following:
@@ -114,4 +120,21 @@ export const createAuthUserWithEmailAndPassword = async (email, password) => {
   // this won't run unless we get both the above values.
   return await createUserWithEmailAndPassword(auth, email, password);
 }
+
+// The same here, except for the sign in form.
+export const signInAuthUserWithEmailAndPassword = async (email, password) => {
+  if (!email || !password) return;
+  // this won't run unless we get both the above values.
+  return await signInWithEmailAndPassword(auth, email, password);
+} 
+
+export const signOutUser = async () => await signOut(auth);
+
+// return whatever we get back from onAuthStateChanged. We pass it a callback.
+// ** i had this as an await function before; it broke my whole application! **
+export const onAuthStateChangedListener = (callback) => 
+  // onAuthStateChange runs the callback whenever the state of the auth singleton changes.
+  // it's permanently listening to auth state changes. but we need to tell it to stop listening
+  // whenever the userProvider component (user.context.jsx) unmounts, otherwise: memory leak
+  onAuthStateChanged(auth, callback);
 

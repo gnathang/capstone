@@ -6,6 +6,7 @@ import Button from '../button/button.component';
 
 import { createAuthUserWithEmailAndPassword, createUserDocumentFromAuth } from '../../utils/firebase/firebase.utils';
 
+
 import './sign-up-form.styles.scss' 
 
 // object that allows us to keep track of multiple fields inside our form.
@@ -20,14 +21,13 @@ const SignUpForm = () => {
   // pass usestate the defaultFormFields value, which is an object with the above values
   const [formFields, setFormFields] = useState(defaultFormFields);
   const { displayName, email, password, confirmPassword } = formFields; // init values, which will change.
+  
   const resetFormFields = () => {
     setFormFields(defaultFormFields);
   }
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    
-    const authUser = createAuthUserWithEmailAndPassword();
     
     if (password !== confirmPassword) {
       alert('passwords do not match');
@@ -38,7 +38,7 @@ const SignUpForm = () => {
       const { user } = await createAuthUserWithEmailAndPassword(
         email, password
       );
-      
+
       await createUserDocumentFromAuth(user, { displayName });
       resetFormFields();
       
@@ -115,7 +115,7 @@ const SignUpForm = () => {
 
       </form>
     </div>
-  );
+  );  
 }
 
 export default SignUpForm;
